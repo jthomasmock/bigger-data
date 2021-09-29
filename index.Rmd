@@ -22,6 +22,7 @@ library(tidyverse)
 library(testthat)
 library(arrow)
 library(duckdb)
+library(DBI)
 library(gt)
 library(devtools)
 library(usethis)
@@ -42,7 +43,7 @@ meta() %>%
     image_alt = paste(
       "Title slide of 'Bigger Data with arrow and duckdb'.", 
       "A slide deck covering the basics of using arrow and duckdb with bigger than memory data.",
-      "It also has an image of a orange rubik cube with a blue heart in the middle."
+      "It also has a picture of two people walking up a large incline/mountain."
     ),
     og_type = "website",
     og_author = "Tom Mock",
@@ -64,20 +65,776 @@ class: title-slide, left, top
 
 <br>
 
-#### `r fontawesome::fa("link", "white")` [colorado.rstudio.com/rsc/pkg-building](https://colorado.rstudio.com/rsc/pkg-building/)
-#### `r fontawesome::fa("github", "white")` [github.com/jthomasmock/pkg-building](https://github.com/jthomasmock/pkg-building)
+.small[ `r fontawesome::fa("link", "white")` [colorado.rstudio.com/rsc/bigger-data-prez](https://colorado.rstudio.com/rsc/bigger-data-prez) ]  
+.small[`r fontawesome::fa("github", "white")` [github.com/jthomasmock/bigger-data-prez](https://github.com/jthomasmock/bigger-data-prez) ]  
 
-<span style='color:white;'>Slides released under</span> [CC-BY 2.0](https://creativecommons.org/licenses/by/2.0/) <svg aria-hidden="true" role="img" viewBox="0 0 496 512" style="height:1em;width:0.97em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:white;overflow:visible;position:relative;"><path d="M245.83 214.87l-33.22 17.28c-9.43-19.58-25.24-19.93-27.46-19.93-22.13 0-33.22 14.61-33.22 43.84 0 23.57 9.21 43.84 33.22 43.84 14.47 0 24.65-7.09 30.57-21.26l30.55 15.5c-6.17 11.51-25.69 38.98-65.1 38.98-22.6 0-73.96-10.32-73.96-77.05 0-58.69 43-77.06 72.63-77.06 30.72-.01 52.7 11.95 65.99 35.86zm143.05 0l-32.78 17.28c-9.5-19.77-25.72-19.93-27.9-19.93-22.14 0-33.22 14.61-33.22 43.84 0 23.55 9.23 43.84 33.22 43.84 14.45 0 24.65-7.09 30.54-21.26l31 15.5c-2.1 3.75-21.39 38.98-65.09 38.98-22.69 0-73.96-9.87-73.96-77.05 0-58.67 42.97-77.06 72.63-77.06 30.71-.01 52.58 11.95 65.56 35.86zM247.56 8.05C104.74 8.05 0 123.11 0 256.05c0 138.49 113.6 248 247.56 248 129.93 0 248.44-100.87 248.44-248 0-137.87-106.62-248-248.44-248zm.87 450.81c-112.54 0-203.7-93.04-203.7-202.81 0-105.42 85.43-203.27 203.72-203.27 112.53 0 202.82 89.46 202.82 203.26-.01 121.69-99.68 202.82-202.84 202.82z"/></svg><svg aria-hidden="true" role="img" viewBox="0 0 496 512" style="height:1em;width:0.97em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:white;overflow:visible;position:relative;"><path d="M314.9 194.4v101.4h-28.3v120.5h-77.1V295.9h-28.3V194.4c0-4.4 1.6-8.2 4.6-11.3 3.1-3.1 6.9-4.7 11.3-4.7H299c4.1 0 7.8 1.6 11.1 4.7 3.1 3.2 4.8 6.9 4.8 11.3zm-101.5-63.7c0-23.3 11.5-35 34.5-35s34.5 11.7 34.5 35c0 23-11.5 34.5-34.5 34.5s-34.5-11.5-34.5-34.5zM247.6 8C389.4 8 496 118.1 496 256c0 147.1-118.5 248-248.4 248C113.6 504 0 394.5 0 256 0 123.1 104.7 8 247.6 8zm.8 44.7C130.2 52.7 44.7 150.6 44.7 256c0 109.8 91.2 202.8 203.7 202.8 103.2 0 202.8-81.1 202.8-202.8.1-113.8-90.2-203.3-202.8-203.3z"/></svg>
+.small[Slides released under</span> [CC-BY 2.0](https://creativecommons.org/licenses/by/2.0/)`r fontawesome::fa("creative-commons", "white")``r fontawesome::fa("creative-commons-by", "white")` ]   
 
-<div style = "position: absolute;top: 0px;right: 0;"><img src="https://raw.githubusercontent.com/jthomasmock/pkg-building/master/images/pkg-love.png" alt="A person holding a Rubik's cube in their hand. The cube has a heart shaped in the middle." width="600"></img></div>
+<div style = "position: absolute;top: 0px;right: 0;"><img src="https://images.unsplash.com/photo-1579538800945-46d13c694a36?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1470&q=80" alt="Two people walking up a large mountain" width="600"></img></div>
 
 ---
 
 layout: true
 
-<div class="my-footer"><span>https://colorado.rstudio.com/rsc/pkg-building/</span></div>
+<div class="my-footer"><span>https://colorado.rstudio.com/rsc/bigger-data-prez/</span></div>
 
 ---
 
-### Working with bigger than memory data?
+### The initial ask
 
+> Some discussion around in-process analytics  
+> The concept and implementations like DuckDb and Arrow  
+> What the current landscape of options looks like, what is and isn't stable enough for enterprise use  
+> DuckDB backend for dplyr  
+
+* [Hannes Mühleisen & Mark Raasveldt slides, 2021](https://homepages.cwi.nl/~hannes/sigmod2021-muehleisen-inprocess-slides.pdf)  
+* [New directions for Apache Arrow, Wes McKinney 2021-09-13](https://www.slideshare.net/wesm/new-directions-for-apache-arrow)  
+---
+
+### Working with bigger data?
+
+* Relational databases (IE SQL) are still around and hugely popular but...  
+
+--
+
+* Local files are getting bigger  
+
+--
+
+* Data Warehouses/Data Lakes often use flat-file storage (`.csv`, `.parquet`, `.json` etc)  
+
+--
+
+How do you deal with data that isn't already in a database, and is bigger than your memory?  
+
+---
+
+### Pause for one second
+
+If it _can_ fit in memory, then try out:  
+
+* [`vroom::vroom()`](https://vroom.r-lib.org/) or [`data.table::fread()`](https://rdatatable.gitlab.io/data.table/reference/fread.html) for fast file reads _into_ R  
+  * [`vroom(col_select = c(column_name))`](https://vroom.r-lib.org/reference/vroom.html) also allows for partial reads (ie specific columns)  
+
+--
+
+* [`data.table`](https://rdatatable.gitlab.io/data.table/index.html) or [`dtplyr`](https://dtplyr.tidyverse.org/) for fast and efficient in-memory analysis  
+
+--
+
+* Lastly, the [`collapse`](https://sebkrantz.github.io/collapse/) R package for limited, but hyper-performant data manipulation  
+
+---
+
+### Two topics for today
+
+Two relatively lightweight options:  
+
+* The [Apache Arrow](https://arrow.apache.org/) project  
+
+* `duckdb`  
+
+--
+
+* Also, `arrow` can be used inside [`sparklyr`](https://spark.rstudio.com/guides/arrow/) to great effect, but that brings into play Java, Scala, and `rJava` `r emo::ji("shrug")`  
+
+---
+
+### `arrow`
+
+> [Apache Arrow](https://arrow.apache.org/) is a cross-language development platform for in-memory data. It specifies a standardized language-independent columnar memory format for flat and hierarchical data, organized for efficient analytic operations on modern hardware. It also provides computational libraries and zero-copy streaming messaging and interprocess communication.
+
+--
+
+> The `arrow` package exposes an interface to the Arrow C++ library, enabling access to many of its features in R. It provides low-level access to the Arrow C++ library API and higher-level access through a `dplyr` backend and familiar R functions.  
+
+--
+
+For more info, checkout the slides from Wes McKinney as of [September 10th](https://www.slideshare.net/wesm/new-directions-for-apache-arrow)  
+
+
+
+
+---
+
+### [`duckdb`](https://duckdb.org/docs/why_duckdb.html)
+
+> DuckDB plays well with the `dbplyr` / `dplyr` packages for programmatic query construction from R. - [duckdb.org/docs/api/r](https://duckdb.org/docs/api/r)  
+
+--
+
+#### Fast
+
+> DuckDB is designed to support analytical query workloads, also known as Online analytical processing (OLAP). These workloads are characterized by complex, relatively long-running queries that process significant portions of the stored dataset, for example aggregations over entire tables or joins between several large tables.  
+
+--
+
+#### Simple
+
+> DuckDB has no external dependencies, neither for compilation nor during run-time [basically a 10x faster version of SQLite]  
+
+--
+
+#### Feature Rich
+
+> Data can be stored in persistent, single-file databases. DuckDB is deeply integrated into Python and R for efficient interactive data analysis. Use[s] the PostgreSQL parser  
+
+---
+
+.pull-left[
+
+### `r fontawesome::fa("check-circle", "#338333")` When to use DuckDB
+
+* Processing and storing tabular datasets, e.g. from CSV or Parquet files  
+* **Interactive data analysis**, e.g. Joining & aggregate multiple large tables  
+* Concurrent large changes, to multiple large tables, e.g. appending rows, adding/removing/updating columns  
+* Large result set transfer to client  
+
+]
+
+--
+
+
+.pull-right[
+
+
+### `r fontawesome::fa("times-circle", "red")` When to not use DuckDB
+
+* Non-rectangular data sets, e.g. graphs, plaintext  
+* High-volume transactional use cases (e.g. tracking orders in a webshop)  
+* Large client/server installations for centralized enterprise data warehousing  
+* Writing to a single database from multiple concurrent processes  
+
+]
+
+---
+
+### `duckdb` + `dbplyr`
+
+`duckdb` uses Postgres-flavored SQL, so it has deep integration with `dbplyr` out of the box.
+
+--
+
+```{r}
+library("DBI")
+library("dplyr", warn.conflicts = FALSE)
+
+con <- dbConnect(duckdb::duckdb()) # create a temp database
+duckdb::duckdb_register(con, "flights", nycflights13::flights)
+tbl(con, "flights")
+```
+
+---
+
+### `duckdb` + `dbplyr`
+
+`duckdb` uses Postgres-flavored SQL, so it has deep integration with `dbplyr` out of the box.
+
+--
+
+```{r}
+tbl(con, "flights") %>% 
+  group_by(dest) %>%
+  summarise(delay = mean(dep_time))
+```
+
+
+### How big is `nycflights13` anyway?
+
+```{r}
+lobstr::obj_size(nycflights13::flights) %>% 
+  unclass() %>% 
+  scales::label_bytes()(.)
+```
+
+--
+
+### Save to disk as a `.csv`
+
+```{r}
+nycflights13::flights %>% 
+  janitor::clean_names() %>% 
+  write_delim("flights.csv", delim = ",")
+```
+
+--
+
+```{r}
+fs::file_info("flights.csv") %>% pull(size)
+```
+
+
+---
+
+### Load into `duckdb` permanently 
+
+```{r}
+# write to disk as "flightDisk", other defaults to in memory
+con <- DBI::dbConnect(duckdb::duckdb(), "flightDisk")
+
+duckdb::duckdb_read_csv(conn = con, name = "flightsCSV",  files = "flights.csv",
+                        header = TRUE, delim = ",", na.strings = "NA")
+```
+
+--
+
+```{r}
+DBI::dbListTables(con)
+```
+
+---
+
+### Flying with the `duckdb`s
+
+```{r, eval = FALSE}
+flight_tbl <- tbl(con, "flightsCSV")
+```
+
+---
+
+### Flying with the `duckdb`s
+
+```{r}
+flight_tbl <- tbl(con, "flightsCSV")
+flight_tbl
+```
+
+---
+
+### Flying with the `duckdb`s
+
+All out of memory, all on disk
+
+```{r}
+flight_tbl %>% 
+  group_by(month, origin) %>% 
+  summarise(avg_delay = mean(dep_delay, na.rm = TRUE), .groups = "drop") %>% 
+  arrange(desc(avg_delay))
+```
+
+---
+
+### Landing the `duckdb` in memory
+
+.pull-left[
+
+```{r duckdbPlot, eval = FALSE}
+flight_tbl %>% 
+  group_by(origin, month, day) %>% 
+  summarise(
+    avg_delay = mean(dep_delay, na.rm = TRUE), 
+    .groups = "drop"
+    ) %>% 
+  arrange(desc(avg_delay)) %>% 
+  # collect() to bring into R
+  collect() %>% 
+  # and then it's like any other dataframe!
+  ggplot(aes(x = month, y = avg_delay)) +
+  geom_boxplot(aes(group = month)) +
+  geom_jitter(
+    aes(color = origin), 
+    alpha = 0.2, width = 0.4) +
+  facet_wrap(~origin, ncol = 1)
+```
+
+]
+
+--
+
+.pull-right[
+
+```{r duckdbPlot, eval = TRUE, echo = FALSE}
+```
+
+
+]
+
+---
+
+### `arrow` and `duckdb` integration
+
+```{r}
+arrow::InMemoryDataset$create(mtcars) %>%
+  filter(mpg < 30) %>%
+  arrow::to_duckdb() %>%
+  group_by(cyl) %>%
+  summarize(mean_mpg = mean(mpg, na.rm = TRUE))
+```
+
+---
+
+### Big data
+
+ok... so `mtcars` is most definitely not big data.
+
+--
+
+And ~30 Mb of `nycflights.csv` is not that impressive. 
+
+--
+
+Let's use the `arrow` example data, stay in NYC, and look at the `nyc-taxi` fare dataset
+
+--
+
+```{r}
+nyc_fares <- fs::dir_info("nyc-taxi", recurse = TRUE) %>%
+  filter(type == "file") %>% 
+  summarise(n = n(), size = sum(size)) 
+
+glue::glue("There are {nyc_fares$n} files, totaling {nyc_fares$size}!")
+```
+
+--
+
+Now that we have a full quiver of data to pull from, let's shoot some `arrow`s
+
+---
+
+### Shoot some `arrow`s
+
+Benchmarked on a Macbook Pro 2017 with a SSD
+
+```{r}
+library(duckdb)
+library(pins)
+library(arrow, warn.conflicts = FALSE)
+library(dplyr, warn.conflicts = FALSE)
+library(tictoc)
+
+# arrow::arrow_with_s3()
+# setwd("/Volumes/mock-external/")
+# arrow::copy_files("s3://ursa-labs-taxi-data", "nyc-taxi")
+# warning that downloads 37Gb of data!
+
+
+tic()
+ds <- open_dataset("nyc-taxi", partitioning = c("year", "month"))
+toc()
+```
+
+---
+
+### How many ar**rows**?
+
+```{r, cache = TRUE}
+tic()
+full_collect <- summarise(ds, n = n()) %>% 
+  collect() %>% 
+  pull(n)
+n_rows <- scales::unit_format(unit = "billion", scale = 1e-9, 
+                      accuracy = 0.01)(full_collect)
+glue::glue("There are approximately {n_rows} rows!")
+toc()
+```
+
+
+---
+
+### Ludicrous speed!
+
+<iframe src="https://giphy.com/embed/izspP6uMbMeti" width="480" height="254" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/community-playstation-xo-izspP6uMbMeti">via GIPHY</a></p>
+
+---
+
+### How can you query 1.5 BILLION rows in a few seconds?
+
+`arrow` is a columnar data format, as opposed to more traditional storage that is row-based.
+
+--
+
+`arrow` provides an R interface to `feather` and `parquet`, along with more traditional formats. It also provides a translation of `dplyr` into `dbplyr`-style queries OUT of memory.
+
+--
+
+With row-based, when `filter()` or `select()`, the query engine would have to scan every row, parse each column, extract the specified matches and then perform calculations
+
+--
+
+With columnar formats, you can completely skip unnecessary columns, and even for a relatively "narrow" dataset of 6x columns, this means 1/6th the processing... or essentially a 600% performance gain. You can imagine the performance gains when you have wide data with dozens of additional columns that are only needed intermittently.
+
+---
+
+### How can you query 1.5 BILLION rows in a few seconds?
+
+--
+
+The answer? By not reading in 1.5 billion rows.
+
+--
+
+`arrow`'s magic, is that `filter()` + `select()` + columnar data format are "cheat codes" for ludicrously fast queries. BUT it's also very optimized, and simply reading in entire files is also very fast. [Neal Richardson, NYR 2020](https://enpiar.com/talks/nyr-2020/#41)
+
+--
+
+```{r NYRSlides, out.width="50%", echo = FALSE}
+knitr::include_graphics("https://enpiar.com/talks/nyr-2020/img/taxi-single-1.png")
+```
+
+---
+
+### Big data, new data
+
+.left-wide[
+```{r, eval = FALSE}
+tic()
+ds %>%
+  filter(total_amount > 100, year == 2015) %>%
+  select(tip_amount, total_amount, passenger_count) %>%
+  # calculate a new column, on disk!
+  mutate(tip_pct = 100 * tip_amount / total_amount) %>%
+  group_by(passenger_count) %>%
+  summarise(
+    mean_tip_pct = mean(tip_pct),
+    n = n()
+  ) %>%
+  collect() %>%
+  print()
+toc()
+```
+
+]
+
+--
+
+.right-narrow[
+```{r, cache = TRUE, echo = FALSE}
+tic()
+ds %>%
+  filter(total_amount > 100, year == 2015) %>%
+  select(tip_amount, total_amount, passenger_count) %>%
+  # calculate a new column, on disk!
+  mutate(tip_pct = 100 * tip_amount / total_amount) %>%
+  group_by(passenger_count) %>%
+  summarise(
+    mean_tip_pct = mean(tip_pct),
+    n = n()
+  ) %>%
+  collect() %>%
+  print()
+toc()
+```
+
+]
+
+---
+
+### Big data, all the rows
+
+OK not all the rows, but at least the rows with actual passengers (theres some negative values in `passenger_count`... `r emo::ji("thinking")`)
+
+--
+.left-wide[
+```{r, eval = FALSE}
+tic()
+select(ds, passenger_count) %>% 
+  filter(between(passenger_count, 0, 6)) %>% 
+  group_by(passenger_count) %>% 
+  summarise(n = n()) %>% 
+  collect() %>% arrange(desc(passenger_count))
+toc()
+```
+
+
+]
+
+--
+
+.right-narrow[
+```{r, echo = FALSE, cache=TRUE}
+tic()
+select(ds, passenger_count) %>% 
+  filter(between(passenger_count, 0, 6)) %>% 
+  group_by(passenger_count) %>% 
+  summarise(n = n()) %>% 
+  collect() %>% arrange(desc(passenger_count))
+toc()
+```
+
+]
+
+---
+
+### Big data, elsewhere
+
+Same data, but on a remote hard drive, 5400 RPM, via USB 2.0.
+
+.pull-left[
+
+```{r}
+ds_external <- open_dataset(
+  "/Volumes/mock-external/nyc-taxi", 
+  partitioning = c("year", "month"))
+```
+
+```{r remoteData, eval = FALSE}
+tic()
+ds_external %>%
+  filter(total_amount > 100, year == 2015) %>%
+  select(tip_amount, total_amount, passenger_count) %>%
+  # calculate a new column, on remote disk
+  mutate(tip_pct = 100 * tip_amount / total_amount) %>%
+  group_by(passenger_count) %>%
+  summarise(mean_tip_pct = mean(tip_pct),
+    n = n()) %>% collect()
+toc()
+```
+
+
+]
+
+--
+
+.pull-right[
+
+```{r remoteData, eval = TRUE, echo=FALSE, cache = TRUE}
+```
+
+]
+
+---
+
+### We can shoot ducks with arrows
+
+Going back to local SSD and using `arrow::to_duckdb()`, full `group_by()`/`mutate()` support!
+
+--
+
+.left-wide[
+```{r, eval = FALSE}
+tic()
+ds %>%
+  filter(total_amount > 100, year == 2015) %>%
+  select(tip_amount, total_amount, passenger_count) %>%
+  # use arrow to populate directly into a duckdb
+  arrow::to_duckdb() %>% 
+  group_by(passenger_count) %>%  # group_by mutate!
+  mutate(tip_pct = 100 * tip_amount / total_amount) %>%
+  filter(tip_pct >= 25) %>% 
+  summarise(n = n()) %>% collect()
+toc()
+```
+
+]
+
+--
+
+.right-narrow[
+```{r, echo = FALSE, cache = TRUE}
+tic()
+ds %>%
+  filter(total_amount > 100, year == 2015) %>%
+  select(tip_amount, total_amount, passenger_count) %>%
+  # use arrow to populate directly into a duckdb
+  arrow::to_duckdb() %>% 
+  group_by(passenger_count) %>%  # group_by mutate!
+  mutate(tip_pct = 100 * tip_amount / total_amount) %>%
+  filter(tip_pct >= 25) %>% 
+  summarise(n = n()) %>% collect()
+toc()
+```
+]
+
+---
+
+### `pins`
+
+Now, as far as using `arrow` or `duckdb`, since they are single files, you _could_ `pin` them
+
+--
+
+Note, `pins` 1.0, releasing in next few days has native support for `feather` which is essentially an `arrow` dataframe on disk.
+
+--
+
+`duckdb` is a single file, but you should just use `feather` anyway as it's fast to read, relatively efficient to store, and allows you to mix `arrow` native work along with `arrow::to_duckdb()` if you need `duckdb` querying.
+
+--
+
+You could also go `parquet` and switch from `pin_write()` to `pin_upload()`
+
+---
+
+### `pins` comparison
+
+.pull-left[
+
+```{r, eval = FALSE}
+query_feather <- function(){
+  tic()
+  feather_file <- pin_download(
+    board_rsc, 
+    "thomas/big-nyc-feather")
+  
+  feather_file <- arrow::open_dataset(
+    feather_file, format = "feather")
+  
+  summary_feather <- feather_file %>% 
+    select(fare_amount, vendor_id) %>% 
+    filter(vendor_id == "1") %>% 
+    summarise(mean = mean(fare_amount)) %>% 
+    collect()
+
+  toc()
+}
+```
+
+
+]
+
+--
+
+.pull-right[
+
+```{r, eval = FALSE}
+query_rds <- function(){
+  
+  tic()
+  
+  pinned_rds <- pin_read(
+    board_rsc, 
+    "thomas/big-nyc-rds")
+  
+  summary_rds <- pinned_rds %>% 
+    select(fare_amount, vendor_id) %>% 
+    filter(vendor_id == "1") %>% 
+    summarise(mean = mean(fare_amount))
+  
+  toc()
+}
+```
+
+]
+
+
+---
+
+### `pins` comparison
+
+`feather` is native to arrow, so it allows for rapid file reading AND allows for partial reading, through a combination of `filter()` + `select()` + `summarize()`
+
+--
+
+So, `pins` + `feather` + `arrow::open_dataset()` allows for insanely fast queries on relatively large datasets.
+
+--
+
+```{r, eval = FALSE}
+query_feather()
+#> 12.4 sec elapsed
+query_rds()
+#> 12.4 sec elapsed
+```
+
+--
+
+I promised you speed, but they're the same! You can't "beat" download times `r emo::ji("shrug")`
+
+
+---
+
+### `pins` comparison
+
+While you can't beat file transfer, disk space is infinitely cheaper than memory...
+
+--
+
+And your downloaded file still exists!
+
+```{r}
+file.exists("~/Library/Caches/pins/rsc-e62371cfd77db754024f9c5ed3556a73/2f2ee2e3-564a-4791-a7f3-01e22ad2939f/48597/big-nyc-feather.arrow")
+```
+
+--
+
+```{r, eval = FALSE}
+query_feather()
+#> 1.3 sec elapsed
+query_rds()
+#> 13.8 sec elapsed
+```
+
+---
+
+### `pins` comparison
+
+Now, you could get similar speed ups by loading the data completely into memory 1x, but now you're lugging around at least 1 Gb of data for each session... and there are _very few times_ when a user **needs** 1 Gb of data.
+
+--
+
+By selecting "windows" of data rapidly, you get the ability to perform useful queries/summaries across large swaths of data with minimal memory load, and minimal read time.
+
+---
+
+### `pins` comparison
+
+So, in your `shiny` apps:
+
+--
+
+```{r, eval = FALSE}
+feather_file <- pin_download(
+  board_rsc,
+  "thomas/big-nyc-feather"
+)
+
+feather_ds <- arrow::open_dataset(
+  feather_file,
+  format = "feather"
+)
+
+server <- function(input, output, session) {
+  # Lots more code
+  feather_ds %>% 
+    some_queries %>% 
+    some_summary %>% 
+    collect() %>% 
+    if(type == "plot"){
+      plot_it()
+    } else if(type == "table"){
+      table_it()
+    } else {
+      work_it() %>% make_it() %>% do_it() %>% makes_us() %>% 
+        harder_better_faster_stronger()
+    }
+}
+```
+
+---
+
+### `pins` + `duckdb`
+
+File still exists!
+
+--
+
+```{r, eval = FALSE}
+tic()
+feather_file <- pin_download(board_rsc, "thomas/big-nyc-feather")
+
+feather_file <- arrow::open_dataset(feather_file, format = "feather")
+
+summary_duck <- feather_file %>%
+  select(fare_amount, vendor_id) %>%
+  filter(vendor_id == "1") %>%
+  arrow::to_duckdb() %>%
+  summarise(mean = mean(fare_amount, na.rm = TRUE)) %>%
+  collect()
+toc()
+#> 1.48 sec
+```
+
+
+---
+
+### Keeping your `pins` at a distance
+
+If your team happens to use AWS, you can make use of [native S3 support with `arrow`](https://arrow.apache.org/docs/r/articles/fs.html)  
+
+--
+
+Similar to our `pins` workflow, there is unavoidable file-transfer time BUT you can read the files remotely and you can partition the data in S3.
+
+--
+
+This allows `arrow` to intelligently transfer/read only portions of the partitions as necessary, optimizing both the file transfer AND they query/read.

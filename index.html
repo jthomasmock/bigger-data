@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Bigger data</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Tom Mock &amp; Edgar Ruiz" />
+    <meta name="date" content="2021-09-28" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <meta name="github-repo" content="jthomasmock/bigger-data"/>
+    <meta name="twitter:title" content="Bigger data with arrow and duckdb"/>
+    <meta name="twitter:description" content="Bigger than memory data is easy to work with in R, and can be amazingly fast with arrow or duckdb!"/>
+    <meta name="twitter:url" content="https://jthomasmock.github.io/bigger-data"/>
+    <meta name="twitter:image:src" content="https://raw.githubusercontent.com/jthomasmock/bigger-data/master/images/title-card.png"/>
+    <meta name="twitter:image:alt" content="Title slide of &#39;Bigger Data with arrow and duckdb&#39;. A slide deck covering the basics of using arrow and duckdb with bigger than memory data. It also has a picture of two people walking up a large incline/mountain."/>
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:creator" content="@thomas_mock"/>
+    <meta name="twitter:site" content="@thomas_mock"/>
+    <meta property="og:title" content="Bigger data with arrow and duckdb"/>
+    <meta property="og:description" content="Bigger than memory data is easy to work with in R, and can be amazingly fast with arrow or duckdb!"/>
+    <meta property="og:url" content="https://jthomasmock.github.io/bigger-data"/>
+    <meta property="og:image" content="https://raw.githubusercontent.com/jthomasmock/bigger-data/master/images/title-card.png"/>
+    <meta property="og:image:alt" content="Title slide of &#39;Bigger Data with arrow and duckdb&#39;. A slide deck covering the basics of using arrow and duckdb with bigger than memory data. It also has a picture of two people walking up a large incline/mountain."/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:locale" content="en_US"/>
+    <meta property="article:author" content="Tom Mock"/>
+    <link rel="stylesheet" href="css/my-theme.css" type="text/css" />
+    <link rel="stylesheet" href="css/my-fonts.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+
+
+
+
+
+
+class: title-slide, left, top
+
+# Bigger data
+
+## with `arrow` and `duckdb`
+
+### Tom Mock &amp; Edgar Ruiz
+
+### 2021-09-28
+
+&lt;br&gt;
+
+#### <svg aria-hidden="true" role="img" viewBox="0 0 512 512" style="height:1em;width:1em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:white;overflow:visible;position:relative;"><path d="M326.612 185.391c59.747 59.809 58.927 155.698.36 214.59-.11.12-.24.25-.36.37l-67.2 67.2c-59.27 59.27-155.699 59.262-214.96 0-59.27-59.26-59.27-155.7 0-214.96l37.106-37.106c9.84-9.84 26.786-3.3 27.294 10.606.648 17.722 3.826 35.527 9.69 52.721 1.986 5.822.567 12.262-3.783 16.612l-13.087 13.087c-28.026 28.026-28.905 73.66-1.155 101.96 28.024 28.579 74.086 28.749 102.325.51l67.2-67.19c28.191-28.191 28.073-73.757 0-101.83-3.701-3.694-7.429-6.564-10.341-8.569a16.037 16.037 0 0 1-6.947-12.606c-.396-10.567 3.348-21.456 11.698-29.806l21.054-21.055c5.521-5.521 14.182-6.199 20.584-1.731a152.482 152.482 0 0 1 20.522 17.197zM467.547 44.449c-59.261-59.262-155.69-59.27-214.96 0l-67.2 67.2c-.12.12-.25.25-.36.37-58.566 58.892-59.387 154.781.36 214.59a152.454 152.454 0 0 0 20.521 17.196c6.402 4.468 15.064 3.789 20.584-1.731l21.054-21.055c8.35-8.35 12.094-19.239 11.698-29.806a16.037 16.037 0 0 0-6.947-12.606c-2.912-2.005-6.64-4.875-10.341-8.569-28.073-28.073-28.191-73.639 0-101.83l67.2-67.19c28.239-28.239 74.3-28.069 102.325.51 27.75 28.3 26.872 73.934-1.155 101.96l-13.087 13.087c-4.35 4.35-5.769 10.79-3.783 16.612 5.864 17.194 9.042 34.999 9.69 52.721.509 13.906 17.454 20.446 27.294 10.606l37.106-37.106c59.271-59.259 59.271-155.699.001-214.959z"/></svg> [colorado.rstudio.com/rsc/bigger-data-prez](https://colorado.rstudio.com/rsc/bigger-data-prez)
+#### <svg aria-hidden="true" role="img" viewBox="0 0 496 512" style="height:1em;width:0.97em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:white;overflow:visible;position:relative;"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg> [github.com/jthomasmock/pkg-building](https://github.com/jthomasmock/bigger-data-prez)
+
+#### Slides released under&lt;/span&gt; [CC-BY 2.0](https://creativecommons.org/licenses/by/2.0/)<svg aria-hidden="true" role="img" viewBox="0 0 496 512" style="height:1em;width:0.97em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:white;overflow:visible;position:relative;"><path d="M245.83 214.87l-33.22 17.28c-9.43-19.58-25.24-19.93-27.46-19.93-22.13 0-33.22 14.61-33.22 43.84 0 23.57 9.21 43.84 33.22 43.84 14.47 0 24.65-7.09 30.57-21.26l30.55 15.5c-6.17 11.51-25.69 38.98-65.1 38.98-22.6 0-73.96-10.32-73.96-77.05 0-58.69 43-77.06 72.63-77.06 30.72-.01 52.7 11.95 65.99 35.86zm143.05 0l-32.78 17.28c-9.5-19.77-25.72-19.93-27.9-19.93-22.14 0-33.22 14.61-33.22 43.84 0 23.55 9.23 43.84 33.22 43.84 14.45 0 24.65-7.09 30.54-21.26l31 15.5c-2.1 3.75-21.39 38.98-65.09 38.98-22.69 0-73.96-9.87-73.96-77.05 0-58.67 42.97-77.06 72.63-77.06 30.71-.01 52.58 11.95 65.56 35.86zM247.56 8.05C104.74 8.05 0 123.11 0 256.05c0 138.49 113.6 248 247.56 248 129.93 0 248.44-100.87 248.44-248 0-137.87-106.62-248-248.44-248zm.87 450.81c-112.54 0-203.7-93.04-203.7-202.81 0-105.42 85.43-203.27 203.72-203.27 112.53 0 202.82 89.46 202.82 203.26-.01 121.69-99.68 202.82-202.84 202.82z"/></svg><svg aria-hidden="true" role="img" viewBox="0 0 496 512" style="height:1em;width:0.97em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:white;overflow:visible;position:relative;"><path d="M314.9 194.4v101.4h-28.3v120.5h-77.1V295.9h-28.3V194.4c0-4.4 1.6-8.2 4.6-11.3 3.1-3.1 6.9-4.7 11.3-4.7H299c4.1 0 7.8 1.6 11.1 4.7 3.1 3.2 4.8 6.9 4.8 11.3zm-101.5-63.7c0-23.3 11.5-35 34.5-35s34.5 11.7 34.5 35c0 23-11.5 34.5-34.5 34.5s-34.5-11.5-34.5-34.5zM247.6 8C389.4 8 496 118.1 496 256c0 147.1-118.5 248-248.4 248C113.6 504 0 394.5 0 256 0 123.1 104.7 8 247.6 8zm.8 44.7C130.2 52.7 44.7 150.6 44.7 256c0 109.8 91.2 202.8 203.7 202.8 103.2 0 202.8-81.1 202.8-202.8.1-113.8-90.2-203.3-202.8-203.3z"/></svg> 
+
+&lt;div style = "position: absolute;top: 0px;right: 0;"&gt;&lt;img src="https://images.unsplash.com/photo-1579538800945-46d13c694a36?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&amp;ixlib=rb-1.2.1&amp;auto=format&amp;fit=crop&amp;w=1470&amp;q=80" alt="Two people walking up a large mountain" width="600"&gt;&lt;/img&gt;&lt;/div&gt;
+
+---
+
+layout: true
+
+&lt;div class="my-footer"&gt;&lt;span&gt;https://colorado.rstudio.com/rsc/bigger-data-prez/&lt;/span&gt;&lt;/div&gt;
+
+---
+
+### The initial ask
+
+&gt; Some discussion around in-process analytics  
+&gt; The concept and implementations like DuckDb and Arrow  
+&gt; What the current landscape of options looks like, what is and isn't stable enough for enterprise use  
+&gt; DuckDB backend for dplyr  
+
+* [Hannes Mühleisen &amp; Mark Raasveldt slides, 2021](https://homepages.cwi.nl/~hannes/sigmod2021-muehleisen-inprocess-slides.pdf)  
+* [New directions for Apache Arrow, Wes McKinney 2021-09-13](https://www.slideshare.net/wesm/new-directions-for-apache-arrow)  
+---
+
+### Working with bigger data?
+
+* Relational databases (IE SQL) are still around and hugely popular but...  
+
+--
+
+* Local files are getting bigger  
+
+--
+
+* Data Warehouses/Data Lakes often use flat-file storage (`.csv`, `.parquet`, `.json` etc)  
+
+--
+
+How do you deal with data that isn't already in a database, and is bigger than your memory?  
+
+---
+
+### Pause for one second
+
+If it _can_ fit in memory, then try out:  
+
+* [`vroom::vroom()`](https://vroom.r-lib.org/) or [`data.table::fread()`](https://rdatatable.gitlab.io/data.table/reference/fread.html) for fast file reads _into_ R  
+  * [`vroom(col_select = c(column_name))`](https://vroom.r-lib.org/reference/vroom.html) also allows for partial reads (ie specific columns)  
+
+--
+
+* [`data.table`](https://rdatatable.gitlab.io/data.table/index.html) or [`dtplyr`](https://dtplyr.tidyverse.org/) for fast and efficient in-memory analysis  
+
+--
+
+* Lastly, the [`collapse`](https://sebkrantz.github.io/collapse/) R package for limited, but hyper-performant data manipulation  
+
+---
+
+### Two topics for today
+
+Two relatively lightweight options:  
+
+* The [Apache Arrow](https://arrow.apache.org/) project  
+
+* `duckdb`  
+
+--
+
+* Also, `arrow` can be used inside [`sparklyr`](https://spark.rstudio.com/guides/arrow/) to great effect, but that brings into play Java, Scala, and `rJava` 🤷  
+
+---
+
+### `arrow`
+
+&gt; [Apache Arrow](https://arrow.apache.org/) is a cross-language development platform for in-memory data. It specifies a standardized language-independent columnar memory format for flat and hierarchical data, organized for efficient analytic operations on modern hardware. It also provides computational libraries and zero-copy streaming messaging and interprocess communication.
+
+--
+
+&gt; The `arrow` package exposes an interface to the Arrow C++ library, enabling access to many of its features in R. It provides low-level access to the Arrow C++ library API and higher-level access through a `dplyr` backend and familiar R functions.  
+
+--
+
+For more info, checkout the slides from Wes McKinney as of [September 10th](https://www.slideshare.net/wesm/new-directions-for-apache-arrow)  
+
+
+
+
+---
+
+### [`duckdb`](https://duckdb.org/docs/why_duckdb.html)
+
+&gt; DuckDB plays well with the `dbplyr` / `dplyr` packages for programmatic query construction from R. - [duckdb.org/docs/api/r](https://duckdb.org/docs/api/r)  
+
+--
+
+#### Fast
+
+&gt; DuckDB is designed to support analytical query workloads, also known as Online analytical processing (OLAP). These workloads are characterized by complex, relatively long-running queries that process significant portions of the stored dataset, for example aggregations over entire tables or joins between several large tables.  
+
+--
+
+#### Simple
+
+&gt; DuckDB has no external dependencies, neither for compilation nor during run-time [basically a 10x faster version of SQLite]  
+
+--
+
+#### Feature Rich
+
+&gt; Data can be stored in persistent, single-file databases. DuckDB is deeply integrated into Python and R for efficient interactive data analysis. Use[s] the PostgreSQL parser  
+
+---
+
+.pull-left[
+
+### <svg aria-hidden="true" role="img" viewBox="0 0 512 512" style="height:1em;width:1em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:#338333;overflow:visible;position:relative;"><path d="M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 119.033 8 256 8s248 111.033 248 248zM227.314 387.314l184-184c6.248-6.248 6.248-16.379 0-22.627l-22.627-22.627c-6.248-6.249-16.379-6.249-22.628 0L216 308.118l-70.059-70.059c-6.248-6.248-16.379-6.248-22.628 0l-22.627 22.627c-6.248 6.248-6.248 16.379 0 22.627l104 104c6.249 6.249 16.379 6.249 22.628.001z"/></svg> When to use DuckDB
+
+* Processing and storing tabular datasets, e.g. from CSV or Parquet files  
+* **Interactive data analysis**, e.g. Joining &amp; aggregate multiple large tables  
+* Concurrent large changes, to multiple large tables, e.g. appending rows, adding/removing/updating columns  
+* Large result set transfer to client  
+
+]
+
+--
+
+
+.pull-right[
+
+
+### <svg aria-hidden="true" role="img" viewBox="0 0 512 512" style="height:1em;width:1em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:red;overflow:visible;position:relative;"><path d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm121.6 313.1c4.7 4.7 4.7 12.3 0 17L338 377.6c-4.7 4.7-12.3 4.7-17 0L256 312l-65.1 65.6c-4.7 4.7-12.3 4.7-17 0L134.4 338c-4.7-4.7-4.7-12.3 0-17l65.6-65-65.6-65.1c-4.7-4.7-4.7-12.3 0-17l39.6-39.6c4.7-4.7 12.3-4.7 17 0l65 65.7 65.1-65.6c4.7-4.7 12.3-4.7 17 0l39.6 39.6c4.7 4.7 4.7 12.3 0 17L312 256l65.6 65.1z"/></svg> When to not use DuckDB
+
+* Non-rectangular data sets, e.g. graphs, plaintext  
+* High-volume transactional use cases (e.g. tracking orders in a webshop)  
+* Large client/server installations for centralized enterprise data warehousing  
+* Writing to a single database from multiple concurrent processes  
+
+]
+
+---
+
+### `duckdb` + `dbplyr`
+
+`duckdb` uses Postgres-flavored SQL, so it has deep integration with `dbplyr` out of the box.
+
+--
+
+
+```r
+library("DBI")
+library("dplyr", warn.conflicts = FALSE)
+
+con &lt;- dbConnect(duckdb::duckdb()) # create a temp database
+duckdb::duckdb_register(con, "flights", nycflights13::flights)
+tbl(con, "flights")
+```
+
+```
+## # Source:   table&lt;flights&gt; [?? x 19]
+## # Database: duckdb_connection
+##     year month   day dep_time sched_dep_time dep_delay arr_time sched_arr_time
+##    &lt;int&gt; &lt;int&gt; &lt;int&gt;    &lt;int&gt;          &lt;int&gt;     &lt;dbl&gt;    &lt;int&gt;          &lt;int&gt;
+##  1  2013     1     1      517            515         2      830            819
+##  2  2013     1     1      533            529         4      850            830
+##  3  2013     1     1      542            540         2      923            850
+##  4  2013     1     1      544            545        -1     1004           1022
+##  5  2013     1     1      554            600        -6      812            837
+##  6  2013     1     1      554            558        -4      740            728
+##  7  2013     1     1      555            600        -5      913            854
+##  8  2013     1     1      557            600        -3      709            723
+##  9  2013     1     1      557            600        -3      838            846
+## 10  2013     1     1      558            600        -2      753            745
+## # … with more rows, and 11 more variables: arr_delay &lt;dbl&gt;, carrier &lt;chr&gt;,
+## #   flight &lt;int&gt;, tailnum &lt;chr&gt;, origin &lt;chr&gt;, dest &lt;chr&gt;, air_time &lt;dbl&gt;,
+## #   distance &lt;dbl&gt;, hour &lt;dbl&gt;, minute &lt;dbl&gt;, time_hour &lt;dttm&gt;
+```
+
+---
+
+### `duckdb` + `dbplyr`
+
+`duckdb` uses Postgres-flavored SQL, so it has deep integration with `dbplyr` out of the box.
+
+--
+
+
+```r
+tbl(con, "flights") %&gt;% 
+  group_by(dest) %&gt;%
+  summarise(delay = mean(dep_time))
+```
+
+```
+## Warning: Missing values are always removed in SQL.
+## Use `mean(x, na.rm = TRUE)` to silence this warning
+## This warning is displayed only once per session.
+```
+
+```
+## # Source:   lazy query [?? x 2]
+## # Database: duckdb_connection
+##    dest  delay
+##    &lt;chr&gt; &lt;dbl&gt;
+##  1 IAH   1266.
+##  2 MIA   1245.
+##  3 BQN   1375.
+##  4 ATL   1293.
+##  5 ORD   1310.
+##  6 FLL   1327.
+##  7 IAD   1306.
+##  8 MCO   1337.
+##  9 PBI   1335.
+## 10 TPA   1346.
+## # … with more rows
+```
+
+
+### How big is `nycflights13` anyway?
+
+
+```r
+lobstr::obj_size(nycflights13::flights) %&gt;% 
+  unclass() %&gt;% 
+  scales::label_bytes()(.)
+```
+
+```
+## [1] "41 MB"
+```
+
+--
+
+### Save to disk as a `.csv`
+
+
+```r
+nycflights13::flights %&gt;% 
+  janitor::clean_names() %&gt;% 
+  write_delim("flights.csv", delim = ",")
+```
+
+--
+
+
+```r
+fs::file_info("flights.csv") %&gt;% pull(size)
+```
+
+```
+## 29.6M
+```
+
+
+---
+
+### Load into `duckdb` permanently 
+
+
+```r
+# write to disk as "flightDisk", other defaults to in memory
+con &lt;- DBI::dbConnect(duckdb::duckdb(), "flightDisk")
+
+duckdb::duckdb_read_csv(conn = con, name = "flightsCSV",  files = "flights.csv",
+                        header = TRUE, delim = ",", na.strings = "NA")
+```
+
+--
+
+
+```r
+DBI::dbListTables(con)
+```
+
+```
+## [1] "flightsCSV"
+```
+
+---
+
+### Flying with the `duckdb`s
+
+
+```r
+flight_tbl &lt;- tbl(con, "flightsCSV")
+```
+
+---
+
+### Flying with the `duckdb`s
+
+
+```r
+flight_tbl &lt;- tbl(con, "flightsCSV")
+flight_tbl
+```
+
+```
+## # Source:   table&lt;flightsCSV&gt; [?? x 19]
+## # Database: duckdb_connection
+##     year month   day dep_time sched_dep_time dep_delay arr_time sched_arr_time
+##    &lt;int&gt; &lt;int&gt; &lt;int&gt;    &lt;int&gt;          &lt;int&gt;     &lt;int&gt;    &lt;int&gt;          &lt;int&gt;
+##  1  2013     1     1      517            515         2      830            819
+##  2  2013     1     1      533            529         4      850            830
+##  3  2013     1     1      542            540         2      923            850
+##  4  2013     1     1      544            545        -1     1004           1022
+##  5  2013     1     1      554            600        -6      812            837
+##  6  2013     1     1      554            558        -4      740            728
+##  7  2013     1     1      555            600        -5      913            854
+##  8  2013     1     1      557            600        -3      709            723
+##  9  2013     1     1      557            600        -3      838            846
+## 10  2013     1     1      558            600        -2      753            745
+## # … with more rows, and 11 more variables: arr_delay &lt;int&gt;, carrier &lt;chr&gt;,
+## #   flight &lt;int&gt;, tailnum &lt;chr&gt;, origin &lt;chr&gt;, dest &lt;chr&gt;, air_time &lt;int&gt;,
+## #   distance &lt;int&gt;, hour &lt;int&gt;, minute &lt;int&gt;, time_hour &lt;chr&gt;
+```
+
+---
+
+### Flying with the `duckdb`s
+
+All out of memory, all on disk
+
+
+```r
+flight_tbl %&gt;% 
+  group_by(month, origin) %&gt;% 
+  summarise(avg_delay = mean(dep_delay, na.rm = TRUE), .groups = "drop") %&gt;% 
+  arrange(desc(avg_delay))
+```
+
+```
+## # Source:     lazy query [?? x 3]
+## # Database:   duckdb_connection
+## # Ordered by: desc(avg_delay)
+##    month origin avg_delay
+##    &lt;int&gt; &lt;chr&gt;      &lt;dbl&gt;
+##  1     7 JFK         23.8
+##  2     6 EWR         22.5
+##  3     7 EWR         22.0
+##  4    12 EWR         21.0
+##  5     6 JFK         20.5
+##  6     6 LGA         19.3
+##  7     7 LGA         19.0
+##  8     3 EWR         18.1
+##  9     4 EWR         17.4
+## 10     5 EWR         15.4
+## # … with more rows
+```
+
+---
+
+### Landing the `duckdb` in memory
+
+.pull-left[
+
+
+```r
+flight_tbl %&gt;% 
+  group_by(origin, month, day) %&gt;% 
+  summarise(
+    avg_delay = mean(dep_delay, na.rm = TRUE), 
+    .groups = "drop"
+    ) %&gt;% 
+  arrange(desc(avg_delay)) %&gt;% 
+  # collect() to bring into R
+  collect() %&gt;% 
+  # and then it's like any other dataframe!
+  ggplot(aes(x = month, y = avg_delay)) +
+  geom_boxplot(aes(group = month)) +
+  geom_jitter(
+    aes(color = origin), 
+    alpha = 0.2, width = 0.4) +
+  facet_wrap(~origin, ncol = 1)
+```
+
+]
+
+--
+
+.pull-right[
+
+![](index_files/figure-html/duckdbPlot-1.png)&lt;!-- --&gt;
+
+
+]
+
+---
+
+### `arrow` and `duckdb` integration
+
+
+```r
+arrow::InMemoryDataset$create(mtcars) %&gt;%
+  filter(mpg &lt; 30) %&gt;%
+  arrow::to_duckdb() %&gt;%
+  group_by(cyl) %&gt;%
+  summarize(mean_mpg = mean(mpg, na.rm = TRUE))
+```
+
+```
+## # Source:   lazy query [?? x 2]
+## # Database: duckdb_connection
+##     cyl mean_mpg
+##   &lt;dbl&gt;    &lt;dbl&gt;
+## 1     6     19.7
+## 2     4     23.7
+## 3     8     15.1
+```
+
+---
+
+### Big data
+
+ok... so `mtcars` is most definitely not big data.
+
+--
+
+And ~30 Mb of `nycflights.csv` is not that impressive. 
+
+--
+
+Let's use the `arrow` example data, stay in NYC, and look at the `nyc-taxi` fare dataset
+
+--
+
+
+```r
+nyc_fares &lt;- fs::dir_info("nyc-taxi", recurse = TRUE) %&gt;%
+  filter(type == "file") %&gt;% 
+  summarise(n = n(), size = sum(size)) 
+
+glue::glue("There are {nyc_fares$n} files, totaling {nyc_fares$size}!")
+```
+
+```
+## There are 125 files, totaling 37G!
+```
+
+--
+
+Now that we have a full quiver of data to pull from, let's shoot some `arrow`s
+
+---
+
+### Shoot some `arrow`s
+
+Benchmarked on a Macbook Pro 2017 with a SSD
+
+
+```r
+library(duckdb)
+library(pins)
+library(arrow, warn.conflicts = FALSE)
+library(dplyr, warn.conflicts = FALSE)
+library(tictoc)
+
+# arrow::arrow_with_s3()
+# setwd("/Volumes/mock-external/")
+# arrow::copy_files("s3://ursa-labs-taxi-data", "nyc-taxi")
+# warning that downloads 37Gb of data!
+
+
+tic()
+ds &lt;- open_dataset("nyc-taxi", partitioning = c("year", "month"))
+toc()
+```
+
+```
+## 0.078 sec elapsed
+```
+
+---
+
+### How many ar**rows**?
+
+
+```r
+tic()
+full_collect &lt;- summarise(ds, n = n()) %&gt;% 
+  collect() %&gt;% 
+  pull(n)
+n_rows &lt;- scales::unit_format(unit = "billion", scale = 1e-9, 
+                      accuracy = 0.01)(full_collect)
+glue::glue("There are approximately {n_rows} rows!")
+```
+
+```
+## There are approximately 1.55 billion rows!
+```
+
+```r
+toc()
+```
+
+```
+## 1.142 sec elapsed
+```
+
+
+---
+
+### Ludicrous speed!
+
+&lt;iframe src="https://giphy.com/embed/izspP6uMbMeti" width="480" height="254" frameBorder="0" class="giphy-embed" allowFullScreen&gt;&lt;/iframe&gt;&lt;p&gt;&lt;a href="https://giphy.com/gifs/community-playstation-xo-izspP6uMbMeti"&gt;via GIPHY&lt;/a&gt;&lt;/p&gt;
+
+---
+
+### How can you query 1.5 BILLION rows in a few seconds?
+
+`arrow` is a columnar data format, as opposed to more traditional storage that is row-based.
+
+--
+
+`arrow` provides an R interface to `feather` and `parquet`, along with more traditional formats. It also provides a translation of `dplyr` into `dbplyr`-style queries OUT of memory.
+
+--
+
+With row-based, when `filter()` or `select()`, the query engine would have to scan every row, parse each column, extract the specified matches and then perform calculations
+
+--
+
+With columnar formats, you can completely skip unnecessary columns, and even for a relatively "narrow" dataset of 6x columns, this means 1/6th the processing... or essentially a 600% performance gain. You can imagine the performance gains when you have wide data with dozens of additional columns that are only needed intermittently.
+
+---
+
+### How can you query 1.5 BILLION rows in a few seconds?
+
+--
+
+The answer? By not reading in 1.5 billion rows.
+
+--
+
+`arrow`'s magic, is that `filter()` + `select()` + columnar data format are "cheat codes" for ludicrously fast queries. BUT it's also very optimized, and simply reading in entire files is also very fast.
+
+--
+
+[Slide 31 of NYR 2020](https://enpiar.com/talks/nyr-2020/#41)
+
+
+```r
+knitr::include_graphics("https://enpiar.com/talks/nyr-2020/img/taxi-single-1.png")
+```
+
+&lt;img src="https://enpiar.com/talks/nyr-2020/img/taxi-single-1.png" width="70%" /&gt;
+
+---
+
+### Big data, new data
+
+.pull-left-wide[
+
+```r
+tic()
+ds %&gt;%
+  filter(total_amount &gt; 100, year == 2015) %&gt;%
+  select(tip_amount, total_amount, passenger_count) %&gt;%
+  # calculate a new column, on disk!
+  mutate(tip_pct = 100 * tip_amount / total_amount) %&gt;%
+  group_by(passenger_count) %&gt;%
+  summarise(
+    mean_tip_pct = mean(tip_pct),
+    n = n()
+  ) %&gt;%
+  collect() %&gt;%
+  print()
+toc()
+```
+
+]
+
+--
+
+.pull-right-narrow[
+
+```
+## # A tibble: 10 × 3
+##    passenger_count mean_tip_pct      n
+##              &lt;int&gt;        &lt;dbl&gt;  &lt;int&gt;
+##  1               2        12.6   34418
+##  2               1        13.5  143087
+##  3               4        11.1    4771
+##  4               5        16.8    5806
+##  5               3        11.9    8922
+##  6               0         9.78    380
+##  7               6        18.2    3338
+##  8               8        16.5      32
+##  9               7        16.3      11
+## 10               9        12.7      42
+```
+
+```
+## 7.562 sec elapsed
+```
+
+]
+
+---
+
+### Big data, all the rows
+
+OK not all the rows, but at least the rows with actual passengers (theres some negative values in `passenger_count`... 🤔)
+
+
+```r
+tic()
+select(ds, passenger_count) %&gt;% 
+  filter(between(passenger_count, 0, 6)) %&gt;% 
+  group_by(passenger_count) %&gt;% 
+  summarise(n = n()) %&gt;% 
+  collect() %&gt;% arrange(desc(passenger_count))
+```
+
+```
+## # A tibble: 7 × 2
+##   passenger_count          n
+##             &lt;int&gt;      &lt;int&gt;
+## 1               6   37241244
+## 2               5   99064441
+## 3               4   32443710
+## 4               3   67096194
+## 5               2  227454966
+## 6               1 1078624900
+## 7               0    5809809
+```
+
+```r
+toc()
+```
+
+```
+## 46.646 sec elapsed
+```
+
+
+---
+
+### Big data, elsewhere
+
+Same data, but on a remote hard drive, 5400 RPM, via USB 2.0.
+
+.pull-left[
+
+
+```r
+ds_external &lt;- open_dataset(
+  "/Volumes/mock-external/nyc-taxi", 
+  partitioning = c("year", "month"))
+```
+
+
+```r
+tic()
+ds_external %&gt;%
+  filter(total_amount &gt; 100, year == 2015) %&gt;%
+  select(tip_amount, total_amount, passenger_count) %&gt;%
+  # calculate a new column, on remote disk
+  mutate(tip_pct = 100 * tip_amount / total_amount) %&gt;%
+  group_by(passenger_count) %&gt;%
+  summarise(mean_tip_pct = mean(tip_pct),
+    n = n()) %&gt;% collect()
+toc()
+```
+
+
+]
+
+--
+
+.pull-right[
+
+
+```
+## # A tibble: 10 × 3
+##    passenger_count mean_tip_pct      n
+##              &lt;int&gt;        &lt;dbl&gt;  &lt;int&gt;
+##  1               1        13.5  143087
+##  2               2        12.6   34418
+##  3               4        11.1    4771
+##  4               3        11.9    8922
+##  5               6        18.2    3338
+##  6               5        16.8    5806
+##  7               0         9.78    380
+##  8               9        12.7      42
+##  9               8        16.5      32
+## 10               7        16.3      11
+```
+
+```
+## 61.315 sec elapsed
+```
+
+]
+
+---
+
+### We can shoot ducks with arrows
+
+Going back to local SSD and using `arrow::to_duckdb()`, full `group_by()`/`mutate()` support!
+
+
+```r
+tic()
+ds %&gt;%
+  filter(total_amount &gt; 100, year == 2015) %&gt;%
+  select(tip_amount, total_amount, passenger_count) %&gt;%
+  # use arrow to populate directly into a duckdb
+  arrow::to_duckdb() %&gt;% 
+  group_by(passenger_count) %&gt;%  # group_by mutate!
+  mutate(tip_pct = 100 * tip_amount / total_amount) %&gt;%
+  filter(tip_pct &gt;= 25) %&gt;% 
+  summarise(n = n()) %&gt;% collect()
+```
+
+```
+## # A tibble: 9 × 2
+##   passenger_count     n
+##             &lt;int&gt; &lt;dbl&gt;
+## 1               0     6
+## 2               1  6464
+## 3               2  1276
+## 4               3   324
+## 5               4   205
+## 6               5   345
+## 7               6   303
+## 8               7     1
+## 9               9     1
+```
+
+```r
+toc()
+```
+
+```
+## 9.682 sec elapsed
+```
+
+---
+
+### `pins`
+
+Now, as far as using `arrow` or `duckdb`, since they are single files, you _could_ `pin` them
+
+--
+
+Note, `pins` 1.0, releasing in next few days has native support for `feather` which is essentially an `arrow` dataframe on disk.
+
+--
+
+`duckdb` is a single file, but you should just use `feather` anyway as it's fast to read and allows you to mix `arrow` native work along with `arrow::to_duckdb()` if you need `duckdb` querying.
+
+---
+
+### `pins` comparison
+
+.pull-left[
+
+
+```r
+query_feather &lt;- function(){
+  tic()
+  feather_file &lt;- pin_download(
+    board_rsc, 
+    "thomas/big-nyc-feather")
+  
+  feather_file &lt;- arrow::open_dataset(
+    feather_file, format = "feather")
+  
+  summary_feather &lt;- feather_file %&gt;% 
+    select(fare_amount, vendor_id) %&gt;% 
+    filter(vendor_id == "1") %&gt;% 
+    summarise(mean = mean(fare_amount)) %&gt;% 
+    collect()
+
+  toc()
+}
+```
+
+
+]
+
+--
+
+.pull-right[
+
+
+```r
+query_rds &lt;- function(){
+  
+  tic()
+  
+  pinned_rds &lt;- pin_read(
+    board_rsc, 
+    "thomas/big-nyc-rds")
+  
+  summary_rds &lt;- pinned_rds %&gt;% 
+    select(fare_amount, vendor_id) %&gt;% 
+    filter(vendor_id == "1") %&gt;% 
+    summarise(mean = mean(fare_amount))
+  
+  toc()
+}
+```
+
+]
+
+
+---
+
+### `pins` comparison
+
+`feather` is native to arrow, so it allows for rapid file reading AND allows for partial reading, through a combination of `filter()` + `select()` + `summarize()`
+
+--
+
+So, `pins` + `feather` + `arrow::open_dataset()` allows for insanely fast queries on relatively large datasets.
+
+--
+
+
+```r
+query_feather()
+#&gt; 12.4 sec elapsed
+query_rds()
+#&gt; 12.4 sec elapsed
+```
+
+--
+
+I promised you speed, but they're the same! You can't "beat" download times 🤷
+
+
+---
+
+### `pins` comparison
+
+While you can't beat file transfer, disk space is infinitely cheaper than memory...
+
+--
+
+And your downloaded file still exists!
+
+
+```r
+file.exists("~/Library/Caches/pins/rsc-e62371cfd77db754024f9c5ed3556a73/2f2ee2e3-564a-4791-a7f3-01e22ad2939f/48597/big-nyc-feather.arrow")
+```
+
+```
+## [1] TRUE
+```
+
+--
+
+
+```r
+query_feather()
+#&gt; 1.3 sec elapsed
+query_rds()
+#&gt; 13.8 sec elapsed
+```
+
+---
+
+### `pins` comparison
+
+Now, you could get similar speed ups by loading the data completely into memory 1x, but now you're lugging around at least 1 Gb of data for each session... and there are _very few times_ when a user **needs** 1 Gb of data.
+
+--
+
+By selecting "windows" of data rapidly, you get the ability to perform useful queries/summaries across large swaths of data with minimal memory load, and minimal read time.
+
+--
+
+So, in your `shiny` apps:
+
+
+```r
+feather_file &lt;- pin_download(
+  board_rsc,
+  "thomas/big-nyc-feather"
+)
+
+feather_ds &lt;- arrow::open_dataset(
+  feather_file,
+  format = "feather"
+)
+
+server &lt;- function(input, output, session) {
+  # Lots more code
+  feather_ds %&gt;% 
+    some_queries %&gt;% 
+    some_summary %&gt;% 
+    collect() %&gt;% 
+    if(type == "plot"){
+      plot_it()
+    } else if(type == "table"){
+      table_it()
+    } else {
+      work_it() %&gt;% make_it() %&gt;% do_it() %&gt;% makes_us() %&gt;% 
+        harder_better_faster_stronger()
+    }
+}
+```
+
+---
+
+### `pins` + `duckdb`
+
+
+```r
+file.exists("~/Library/Caches/pins/rsc-e62371cfd77db754024f9c5ed3556a73/2f2ee2e3-564a-4791-a7f3-01e22ad2939f/48597/big-nyc-feather.arrow")
+```
+
+```
+## [1] TRUE
+```
+
+--
+
+
+```r
+tic()
+feather_file &lt;- pin_download(
+  board_rsc,
+  "thomas/big-nyc-feather"
+)
+
+feather_file &lt;- arrow::open_dataset(
+  feather_file,
+  format = "feather"
+)
+
+summary_duck &lt;- feather_file %&gt;%
+  select(fare_amount, vendor_id) %&gt;%
+  filter(vendor_id == "1") %&gt;%
+  arrow::to_duckdb() %&gt;%
+  summarise(mean = mean(fare_amount, na.rm = TRUE)) %&gt;%
+  collect()
+toc()
+#&gt; 1.48 sec
+```
+
+
+---
+
+### Keeping your `pins` at a distance
+
+If your team happens to use AWS, you can make use of [native S3 support with `arrow`](https://arrow.apache.org/docs/r/articles/fs.html)  
+
+--
+
+Similar to our `pins` workflow, there is unavoidable file-transfer time BUT you can read the files remotely and you can partition the data in S3.
+
+--
+
+This allows `arrow` to intelligiently transfer/read only portions of the partitions as necessary.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightStyle": "dracula",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

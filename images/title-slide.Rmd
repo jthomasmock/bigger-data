@@ -1,0 +1,73 @@
+---
+title: "Bigger data"
+subtitle: "with `arrow` and `duckdb`"
+author: "Tom Mock & Edgar Ruiz"
+date: "`r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    css: ["default", "css/my-theme.css", "css/my-fonts.css"]
+    seal: false
+    lib_dir: libs
+    nature:
+      ratio: '191:100'
+      highlightStyle: dracula
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE,
+        eval = TRUE)
+library(tidyverse)
+library(testthat)
+library(arrow)
+library(duckdb)
+library(DBI)
+library(gt)
+library(devtools)
+library(usethis)
+```
+
+```{r metathis, echo=FALSE}
+library(metathis)
+meta() %>%
+  meta_name("github-repo" = "jthomasmock/bigger-data") %>% 
+  meta_social(
+    title = "Bigger data with arrow and duckdb",
+    description = paste(
+      "Bigger than memory data is easy to work with in R,",
+      "and can be amazingly fast with arrow or duckdb!"
+    ),
+    url = "https://jthomasmock.github.io/bigger-data",
+    image = "https://raw.githubusercontent.com/jthomasmock/bigger-data/master/images/title-card.png",
+    image_alt = paste(
+      "Title slide of 'Bigger Data with arrow and duckdb'.", 
+      "A slide deck covering the basics of using arrow and duckdb with bigger than memory data.",
+      "It also has a picture of two people walking up a large incline/mountain."
+    ),
+    og_type = "website",
+    og_author = "Tom Mock",
+    twitter_card_type = "summary_large_image",
+    twitter_creator = "@thomas_mock",
+    twitter_site = "@thomas_mock"
+  )
+```
+
+class: title-slide, left, top
+
+# `r rmarkdown::metadata$title`
+
+## `r rmarkdown::metadata$subtitle`
+
+### `r rmarkdown::metadata$author`
+
+### `r Sys.Date()`
+
+<br>
+
+`r fontawesome::fa("link", "white")` [colorado.rstudio.com/rsc/bigger-data-prez](https://colorado.rstudio.com/rsc/bigger-data-prez)   
+`r fontawesome::fa("github", "white")` [github.com/jthomasmock/bigger-data-prez](https://github.com/jthomasmock/bigger-data-prez)  
+
+<span style='color:white;'>Slides released under</span> [CC-BY 2.0](https://creativecommons.org/licenses/by/2.0/)`r fontawesome::fa("creative-commons", "white")``r fontawesome::fa("creative-commons-by", "white")` ]   
+
+<div style = "position: absolute;top: 0px;right: 0;"><img src="https://images.unsplash.com/photo-1579538800945-46d13c694a36?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1470&q=80" alt="Two people walking up a large mountain" width="600"></img></div>
