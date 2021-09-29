@@ -5,3 +5,7 @@
 .Rdata
 .httr-oauth
 .DS_Store
+**/nyc-taxi
+flightDisk
+flightDisk.wal
+flights.csv

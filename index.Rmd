@@ -26,6 +26,7 @@ library(DBI)
 library(gt)
 library(devtools)
 library(usethis)
+library(magrittr)
 ```
 
 ```{r metathis, echo=FALSE}
@@ -65,10 +66,10 @@ class: title-slide, left, top
 
 <br>
 
-.small[ `r fontawesome::fa("link", "white")` [colorado.rstudio.com/rsc/bigger-data-prez](https://colorado.rstudio.com/rsc/bigger-data-prez) ]  
-.small[`r fontawesome::fa("github", "white")` [github.com/jthomasmock/bigger-data-prez](https://github.com/jthomasmock/bigger-data-prez) ]  
+`r fontawesome::fa("link", "white")` [colorado.rstudio.com/rsc/bigger-data-prez](https://colorado.rstudio.com/rsc/bigger-data-prez)   
+`r fontawesome::fa("github", "white")` [github.com/jthomasmock/bigger-data-prez](https://github.com/jthomasmock/bigger-data-prez)  
 
-.small[Slides released under</span> [CC-BY 2.0](https://creativecommons.org/licenses/by/2.0/)`r fontawesome::fa("creative-commons", "white")``r fontawesome::fa("creative-commons-by", "white")` ]   
+<span style='color:white;'>Slides released under</span> [CC-BY 2.0](https://creativecommons.org/licenses/by/2.0/)&nbsp;&nbsp;`r fontawesome::fa("creative-commons", "white")``r fontawesome::fa("creative-commons-by", "white")` ]   
 
 <div style = "position: absolute;top: 0px;right: 0;"><img src="https://images.unsplash.com/photo-1579538800945-46d13c694a36?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1470&q=80" alt="Two people walking up a large mountain" width="600"></img></div>
 
@@ -82,10 +83,10 @@ layout: true
 
 ### The initial ask
 
-> Some discussion around in-process analytics  
-> The concept and implementations like DuckDb and Arrow  
-> What the current landscape of options looks like, what is and isn't stable enough for enterprise use  
-> DuckDB backend for dplyr  
+> * Some discussion around in-process analytics  
+> * The concept and implementations like DuckDb and Arrow  
+> * What the current landscape of options looks like, what is and isn't stable enough for enterprise use  
+> * DuckDB backend for dplyr  
 
 * [Hannes Mühleisen & Mark Raasveldt slides, 2021](https://homepages.cwi.nl/~hannes/sigmod2021-muehleisen-inprocess-slides.pdf)  
 * [New directions for Apache Arrow, Wes McKinney 2021-09-13](https://www.slideshare.net/wesm/new-directions-for-apache-arrow)  
@@ -132,11 +133,11 @@ Two relatively lightweight options:
 
 * The [Apache Arrow](https://arrow.apache.org/) project  
 
-* `duckdb`  
+* [`duckdb`](https://duckdb.org/docs/api/r)  
 
 --
 
-* Also, `arrow` can be used inside [`sparklyr`](https://spark.rstudio.com/guides/arrow/) to great effect, but that brings into play Java, Scala, and `rJava` `r emo::ji("shrug")`  
+* Also, `arrow` can be used inside [`sparklyr`](https://spark.rstudio.com/guides/arrow/) to great effect, but that brings into play Java, Scala, and `rJava` `r emo::ji("upside-down")`  
 
 ---
 
@@ -159,13 +160,13 @@ For more info, checkout the slides from Wes McKinney as of [September 10th](http
 
 ### [`duckdb`](https://duckdb.org/docs/why_duckdb.html)
 
-> DuckDB plays well with the `dbplyr` / `dplyr` packages for programmatic query construction from R. - [duckdb.org/docs/api/r](https://duckdb.org/docs/api/r)  
+> DuckDB plays well with `dbplyr` / `dplyr` for querying from R. - [duckdb.org/docs/api/r](https://duckdb.org/docs/api/r)  
 
 --
 
 #### Fast
 
-> DuckDB is designed to support analytical query workloads, also known as Online analytical processing (OLAP). These workloads are characterized by complex, relatively long-running queries that process significant portions of the stored dataset, for example aggregations over entire tables or joins between several large tables.  
+> DuckDB is designed to support analytical query workloads, also known as Online analytical processing (OLAP). These workloads are characterized by complex, relatively long-running queries that process significant portions of the stored dataset, for example aggregations over entire tables.
 
 --
 
@@ -207,6 +208,8 @@ For more info, checkout the slides from Wes McKinney as of [September 10th](http
 
 ]
 
+Credit: [duckdb.org/](https://duckdb.org/)
+
 ---
 
 ### `duckdb` + `dbplyr`
@@ -216,10 +219,9 @@ For more info, checkout the slides from Wes McKinney as of [September 10th](http
 --
 
 ```{r}
-library("DBI")
 library("dplyr", warn.conflicts = FALSE)
 
-con <- dbConnect(duckdb::duckdb()) # create a temp database
+con <- DBI::dbConnect(duckdb::duckdb()) # create a temp database in memory
 duckdb::duckdb_register(con, "flights", nycflights13::flights)
 tbl(con, "flights")
 ```
@@ -235,7 +237,7 @@ tbl(con, "flights")
 ```{r}
 tbl(con, "flights") %>% 
   group_by(dest) %>%
-  summarise(delay = mean(dep_time))
+  summarise(delay = mean(dep_time, na.rm = TRUE))
 ```
 
 
@@ -303,13 +305,11 @@ flight_tbl
 
 ### Flying with the `duckdb`s
 
-All out of memory, all on disk
-
 ```{r}
 flight_tbl %>% 
   group_by(month, origin) %>% 
   summarise(avg_delay = mean(dep_delay, na.rm = TRUE), .groups = "drop") %>% 
-  arrange(desc(avg_delay))
+  arrange(desc(avg_delay)) # all on disk still
 ```
 
 ---
@@ -322,7 +322,7 @@ flight_tbl %>%
 flight_tbl %>% 
   group_by(origin, month, day) %>% 
   summarise(
-    avg_delay = mean(dep_delay, na.rm = TRUE), 
+    avg_delay = mean(dep_delay, na.rm = T), 
     .groups = "drop"
     ) %>% 
   arrange(desc(avg_delay)) %>% 
@@ -356,7 +356,7 @@ flight_tbl %>%
 ```{r}
 arrow::InMemoryDataset$create(mtcars) %>%
   filter(mpg < 30) %>%
-  arrow::to_duckdb() %>%
+  arrow::to_duckdb() %>% # oneliner to move into duckdb
   group_by(cyl) %>%
   summarize(mean_mpg = mean(mpg, na.rm = TRUE))
 ```
@@ -377,7 +377,7 @@ Let's use the `arrow` example data, stay in NYC, and look at the `nyc-taxi` fare
 
 --
 
-```{r}
+```{r fareAndSize}
 nyc_fares <- fs::dir_info("nyc-taxi", recurse = TRUE) %>%
   filter(type == "file") %>% 
   summarise(n = n(), size = sum(size)) 
@@ -389,18 +389,22 @@ glue::glue("There are {nyc_fares$n} files, totaling {nyc_fares$size}!")
 
 Now that we have a full quiver of data to pull from, let's shoot some `arrow`s
 
+--
+
+Also RIP my laptop's hard drive space `r emo::ji("bomb")` `r emo::ji("boom")` `r emo::ji("bomb")`
+
 ---
 
 ### Shoot some `arrow`s
 
 Benchmarked on a Macbook Pro 2017 with a SSD
 
-```{r}
+```{r startArrow}
 library(duckdb)
 library(pins)
 library(arrow, warn.conflicts = FALSE)
 library(dplyr, warn.conflicts = FALSE)
-library(tictoc)
+library(tictoc) # for timing
 
 # arrow::arrow_with_s3()
 # setwd("/Volumes/mock-external/")
@@ -410,14 +414,14 @@ library(tictoc)
 
 tic()
 ds <- open_dataset("nyc-taxi", partitioning = c("year", "month"))
-toc()
+toc() # just to show that this is a fast process
 ```
 
 ---
 
 ### How many ar**rows**?
 
-```{r, cache = TRUE}
+```{r ludicrousSpeed, cache = TRUE}
 tic()
 full_collect <- summarise(ds, n = n()) %>% 
   collect() %>% 
@@ -425,7 +429,7 @@ full_collect <- summarise(ds, n = n()) %>%
 n_rows <- scales::unit_format(unit = "billion", scale = 1e-9, 
                       accuracy = 0.01)(full_collect)
 glue::glue("There are approximately {n_rows} rows!")
-toc()
+toc() # wow that's fast.
 ```
 
 
@@ -457,7 +461,9 @@ With columnar formats, you can completely skip unnecessary columns, and even for
 
 ### How can you query 1.5 BILLION rows in a few seconds?
 
---
+---
+
+### How can you query ~~1.5 BILLION rows~~ in a few seconds?
 
 The answer? By not reading in 1.5 billion rows.
 
@@ -470,6 +476,29 @@ The answer? By not reading in 1.5 billion rows.
 ```{r NYRSlides, out.width="50%", echo = FALSE}
 knitr::include_graphics("https://enpiar.com/talks/nyr-2020/img/taxi-single-1.png")
 ```
+
+---
+
+### One more piece of "magic"
+
+`arrow` and `arrow::open_dataset()` allows for the creation and reading of partitioned datasets. The `nyc-taxi` data is _actually_ 126 individual parquet files. Each file is about 300 Mb.
+
+--
+
+```{r}
+ds <- open_dataset("nyc-taxi", partitioning = c("year", "month"))
+```
+
+
+--
+
+```{r}
+fs::dir_ls("nyc-taxi/", recurse = TRUE) %>%  
+  stringr::str_subset("parquet", negate = TRUE) %>% 
+  stringr::str_subset("\\/20[0-9]+\\/") %T>% 
+  {cat("There are", length(.), "files\n")} %>% return()
+```
+
 
 ---
 
@@ -527,11 +556,16 @@ OK not all the rows, but at least the rows with actual passengers (theres some n
 .left-wide[
 ```{r, eval = FALSE}
 tic()
-select(ds, passenger_count) %>% 
+ds %>% 
+  select(passenger_count, total_amount) %>% 
   filter(between(passenger_count, 0, 6)) %>% 
   group_by(passenger_count) %>% 
-  summarise(n = n()) %>% 
-  collect() %>% arrange(desc(passenger_count))
+  summarise(
+    n = n(),
+    mean_total = mean(total_amount, na.rm = TRUE)
+    ) %>% 
+  collect() %>% # pull into memory!
+  arrange(desc(passenger_count))
 toc()
 ```
 
@@ -543,11 +577,14 @@ toc()
 .right-narrow[
 ```{r, echo = FALSE, cache=TRUE}
 tic()
-select(ds, passenger_count) %>% 
+ds %>% 
+  select(passenger_count, total_amount) %>% 
   filter(between(passenger_count, 0, 6)) %>% 
   group_by(passenger_count) %>% 
-  summarise(n = n()) %>% 
-  collect() %>% arrange(desc(passenger_count))
+  summarise(n = n(),
+            mean_total = mean(total_amount, na.rm = TRUE)) %>% 
+  collect() %>% # pull into memory!
+  arrange(desc(passenger_count))
 toc()
 ```
 
@@ -773,21 +810,14 @@ So, in your `shiny` apps:
 --
 
 ```{r, eval = FALSE}
-feather_file <- pin_download(
-  board_rsc,
-  "thomas/big-nyc-feather"
-)
+feather_file <- pin_download(board_rsc, "thomas/big-nyc-feather")
 
-feather_ds <- arrow::open_dataset(
-  feather_file,
-  format = "feather"
-)
+feather_ds <- arrow::open_dataset(feather_file, format = "feather")
 
 server <- function(input, output, session) {
   # Lots more code
   feather_ds %>% 
     some_queries %>% 
-    some_summary %>% 
     collect() %>% 
     if(type == "plot"){
       plot_it()
@@ -837,4 +867,30 @@ Similar to our `pins` workflow, there is unavoidable file-transfer time BUT you 
 
 --
 
-This allows `arrow` to intelligently transfer/read only portions of the partitions as necessary, optimizing both the file transfer AND they query/read.
+This allows `arrow` to intelligently transfer/read only portions of the partitions as necessary, optimizing both the file transfer AND the query/read.
+
+---
+
+### Things we didn't talk about
+
+* Snowflake (uses `arrow` under the hood)  
+
+--
+
+* Dremio (uses `arrow` under the hood)  
+
+--
+
+* Rinse and repeat across many other databases/data warehouse engines, as `arrow` is quickly becoming a standard tool for lots of database/data warehouse/data lake providers  
+
+--
+
+The core idea is if you have a "real" data warehouse, your team has likely already invested in some way to perform queries (and you can probably just use ODBC or equivalent).
+
+--
+
+BUT if you have a need to work with large flat-files, `arrow` and/or `duckdb` are very attractive tools.
+
+--
+
+`pins` can be leveraged along with `arrow`, but you lose a lot of the power of partitioning, since it's a single file. That being said, with `shiny` app-level data, you should be more than fine with a single file.
