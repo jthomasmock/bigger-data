@@ -67,7 +67,7 @@ class: title-slide, left, top
 <br>
 
 `r fontawesome::fa("link", "white")` [colorado.rstudio.com/rsc/bigger-data-prez](https://colorado.rstudio.com/rsc/bigger-data-prez)   
-`r fontawesome::fa("github", "white")` [github.com/jthomasmock/bigger-data-prez](https://github.com/jthomasmock/bigger-data-prez)  
+`r fontawesome::fa("github", "white")` [github.com/jthomasmock/bigger-data](https://github.com/jthomasmock/bigger-data-prez)  
 
 <span style='color:white;'>Slides released under</span> [CC-BY 2.0](https://creativecommons.org/licenses/by/2.0/)&nbsp;&nbsp;`r fontawesome::fa("creative-commons", "white")``r fontawesome::fa("creative-commons-by", "white")` ]   
 
@@ -90,6 +90,39 @@ layout: true
 
 * [Hannes Mühleisen & Mark Raasveldt slides, 2021](https://homepages.cwi.nl/~hannes/sigmod2021-muehleisen-inprocess-slides.pdf)  
 * [New directions for Apache Arrow, Wes McKinney 2021-09-13](https://www.slideshare.net/wesm/new-directions-for-apache-arrow)  
+
+---
+
+### The TLDR;
+
+--
+
+#### `arrow`
+
+> `arrow` is software development platform for building high performance applications that process and transport large data sets  
+
+--
+
+* The `arrow` R package is an interface to data via the `arrow` backend, and has upcoming enhanced support for `dplyr`:  
+  - Existing ungrouped `mutate()`, `filter()`, `select()` in `arrow` 5.0  
+  - `group_by()` + `summarize()` aggregation coming in 6.0  
+* `arrow` data can be "handed off" to `duckdb` with `to_duckdb()` for any `dbplyr` commands without data conversion. IE no serialization or data copying costs are incurred.  
+  
+---
+
+### The TLDR;
+  
+#### `duckdb`
+
+> DuckDB is a lightweight, columnar oriented, on disk database designed to support **analytical query workloads** and has no external dependencies. It's the '`sqlite` for analytics'  
+
+--
+
+* The `duckdb` R package is an interface to `duckdb` from R  
+* It uses postgres 'flavored' SQL with rich support for `dbplyr`  
+* It is up to 10x faster than `sqlite` with the same lightweight structure (just a header and the implementation file)  
+* It can work with existing on-disk data or interact with `arrow` without any transfer costs  
+
 ---
 
 ### Working with bigger data?
@@ -98,7 +131,7 @@ layout: true
 
 --
 
-* Local files are getting bigger  
+* Data and specifically _Local_ files are getting bigger  
 
 --
 
@@ -106,7 +139,11 @@ layout: true
 
 --
 
-How do you deal with data that isn't already in a database, and is bigger than your memory?  
+If the team has a Data Lake (ie semi-structured raw data in CSV, Parquet, JSON, etc) _and_ access to a Data Lake query engine (like Dremio, Athena, Presto, Snowflake, etc), then they should use those tools in R via ODBC  
+
+--
+
+BUT for teams that don't, or have extracts that are still large. How do you work with data that isn't already in a database, and is bigger than your memory?  
 
 ---
 
@@ -119,11 +156,11 @@ If it _can_ fit in memory, then try out:
 
 --
 
-* [`data.table`](https://rdatatable.gitlab.io/data.table/index.html) or [`dtplyr`](https://dtplyr.tidyverse.org/) for fast and efficient in-memory analysis  
+* [`data.table`](https://rdatatable.gitlab.io/data.table/index.html) or the `dplyr` front-end to `data.table` via [`dtplyr`](https://dtplyr.tidyverse.org/) for fast and efficient in-memory analysis  
 
 --
 
-* Lastly, the [`collapse`](https://sebkrantz.github.io/collapse/) R package for limited, but hyper-performant data manipulation  
+* Lastly, the [`collapse`](https://sebkrantz.github.io/collapse/) R package for limited capability, but hyper-performant data manipulation  
 
 ---
 
@@ -137,24 +174,15 @@ Two relatively lightweight options:
 
 --
 
-* Also, `arrow` can be used inside [`sparklyr`](https://spark.rstudio.com/guides/arrow/) to great effect, but that brings into play Java, Scala, and `rJava` `r emo::ji("upside-down")`  
+* Also, `arrow` can be used to expedite data transfer via  [`sparklyr`](https://spark.rstudio.com/guides/arrow/) to great effect, but that brings into play Java, Scala, and `rJava` `r emo::ji("upside-down")`  
 
 ---
 
-### `arrow`
+class: inverse, middle
 
-> [Apache Arrow](https://arrow.apache.org/) is a cross-language development platform for in-memory data. It specifies a standardized language-independent columnar memory format for flat and hierarchical data, organized for efficient analytic operations on modern hardware. It also provides computational libraries and zero-copy streaming messaging and interprocess communication.
+## `duckdb`, like sqlite<br>but _really_ fast
 
---
-
-> The `arrow` package exposes an interface to the Arrow C++ library, enabling access to many of its features in R. It provides low-level access to the Arrow C++ library API and higher-level access through a `dplyr` backend and familiar R functions.  
-
---
-
-For more info, checkout the slides from Wes McKinney as of [September 10th](https://www.slideshare.net/wesm/new-directions-for-apache-arrow)  
-
-
-
+<div style = "position: absolute;top: -120px;right: 0;"><img src="https://images.unsplash.com/photo-1465153690352-10c1b29577f8?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=715&q=80" alt="Two people walking up a large mountain" width="575"></img></div>
 
 ---
 
@@ -351,6 +379,28 @@ flight_tbl %>%
 
 ---
 
+class: inverse, middle
+
+# `Apache`<br>`arrow`
+
+<div style = "position: absolute;top: -50px;right: 0;"><img src="https://images.unsplash.com/photo-1517173524746-c8e3c136d4f7?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=687&q=80" alt="A white arrow on black tarmac" width="575"></img></div>
+
+---
+
+### `arrow`
+
+> [Apache Arrow](https://arrow.apache.org/) is a cross-language development platform for in-memory data. It specifies a standardized language-independent columnar memory format for flat and hierarchical data, organized for efficient analytic operations on modern hardware. It also provides computational libraries and zero-copy streaming messaging and interprocess communication.
+
+--
+
+> The `arrow` package exposes an interface to the Arrow C++ library, enabling access to many of its features in R. It provides low-level access to the Arrow C++ library API and higher-level access through a `dplyr` backend and familiar R functions.  
+
+--
+
+For more info, checkout the slides from Wes McKinney as of [September 10th](https://www.slideshare.net/wesm/new-directions-for-apache-arrow)  
+
+---
+
 ### `arrow` and `duckdb` integration
 
 ```{r}
@@ -397,7 +447,7 @@ Also RIP my laptop's hard drive space `r emo::ji("bomb")` `r emo::ji("boom")` `r
 
 ### Shoot some `arrow`s
 
-Benchmarked on a Macbook Pro 2017 with a SSD
+Benchmarked with R 4.1.1 on a Macbook Pro 2017 (2.3 GHz Dual-Core Intel Core i5) with 16 GB 2133 MHz LPDDR3 and 256 GB SSD
 
 ```{r startArrow}
 library(duckdb)
@@ -435,19 +485,25 @@ toc() # wow that's fast.
 
 ---
 
-### Ludicrous speed!
+class: center, middle
 
-<iframe src="https://giphy.com/embed/izspP6uMbMeti" width="480" height="254" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/community-playstation-xo-izspP6uMbMeti">via GIPHY</a></p>
+# Ludicrous speed!
+
+<iframe src="https://giphy.com/embed/izspP6uMbMeti" width="648" height="343" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/community-playstation-xo-izspP6uMbMeti"></a></p>
 
 ---
 
 ### How can you query 1.5 BILLION rows in a few seconds?
 
-`arrow` is a columnar data format, as opposed to more traditional storage that is row-based.
+> Apache Arrow processes large amounts of data quickly by using Single Instruction Multiple Data (SIMD). Sets of data are broken into batches that fit the cache layers of a CPU. - [Apache Arrow overview from OmniSci](https://www.omnisci.com/technical-glossary/apache-arrow)  
 
 --
 
-`arrow` provides an R interface to `feather` and `parquet`, along with more traditional formats. It also provides a translation of `dplyr` into `dbplyr`-style queries OUT of memory.
+`arrow` provides an R interface to `feather` and `parquet`, along with more traditional formats (CSV, JSON, RDS). It also provides a translation of `dplyr` into `dbplyr`-style queries OUT of memory.
+
+--
+
+`arrow` is a columnar data format, as opposed to more traditional storage that is row-based.
 
 --
 
@@ -465,11 +521,11 @@ With columnar formats, you can completely skip unnecessary columns, and even for
 
 ### How can you query ~~1.5 BILLION rows~~ in a few seconds?
 
-The answer? By not reading in 1.5 billion rows.
+The answer? By **not** reading in 1.5 billion rows.
 
 --
 
-`arrow`'s magic, is that `filter()` + `select()` + columnar data format are "cheat codes" for ludicrously fast queries. BUT it's also very optimized, and simply reading in entire files is also very fast. [Neal Richardson, NYR 2020](https://enpiar.com/talks/nyr-2020/#41)
+`arrow`'s 'magic', is that `filter()` + `select()` + columnar data format are "cheat codes" for ludicrously fast subset queries. BUT it's also very optimized, and simply reading in entire files or entire columns is also very fast. [Neal Richardson, NYR 2020](https://enpiar.com/talks/nyr-2020/#41)
 
 --
 
@@ -481,7 +537,11 @@ knitr::include_graphics("https://enpiar.com/talks/nyr-2020/img/taxi-single-1.png
 
 ### One more piece of "magic"
 
-`arrow` and `arrow::open_dataset()` allows for the creation and reading of partitioned datasets. The `nyc-taxi` data is _actually_ 126 individual parquet files. Each file is about 300 Mb.
+`arrow` and `arrow::open_dataset()` allows for the creation and reading of partitioned datasets. The `nyc-taxi` data is _actually_ 126 individual parquet files. Each file is about 300 Mb. 
+
+--
+
+This allows for "touching" only the necessary subsets, rather than searching the entire combined dataset.
 
 --
 
@@ -550,7 +610,7 @@ toc()
 
 ### Big data, all the rows
 
-OK not all the rows, but at least the rows with actual passengers (theres some negative values in `passenger_count`... `r emo::ji("thinking")`)
+OK not all the rows, but at least the rows with actual passengers (there's some negative values in `passenger_count`... `r emo::ji("thinking")`)
 
 --
 .left-wide[
@@ -594,7 +654,7 @@ toc()
 
 ### Big data, elsewhere
 
-Same data, but on a remote hard drive, 5400 RPM, via USB 2.0.
+Same data, but on a cheap 4TB hard drive, 5400 RPM, connected via USB 2.0.
 
 .pull-left[
 
@@ -633,7 +693,7 @@ toc()
 
 ### We can shoot ducks with arrows
 
-Going back to local SSD and using `arrow::to_duckdb()`, full `group_by()`/`mutate()` support!
+Going back to local SSD and using `arrow::to_duckdb()`, note the full `group_by()`/`mutate()` support!
 
 --
 
@@ -676,19 +736,19 @@ toc()
 
 ### `pins`
 
-Now, as far as using `arrow` or `duckdb`, since they are single files, you _could_ `pin` them
+Now, as far as using `arrow`, since they are single files (eg `feather` or `parquet`), you _could_ `pin` them
 
 --
 
-Note, `pins` 1.0, releasing in next few days has native support for `feather` which is essentially an `arrow` dataframe on disk.
+Note, `pins` 1.0 now has native support for `feather` which is essentially an `arrow` dataframe on disk.
 
 --
 
-`duckdb` is a single file, but you should just use `feather` anyway as it's fast to read, relatively efficient to store, and allows you to mix `arrow` native work along with `arrow::to_duckdb()` if you need `duckdb` querying.
+`duckdb` is two files, but you should just use `feather` anyway as it's fast to read, relatively efficient to store, and allows you to mix `arrow` native work along with `arrow::to_duckdb()` if you need `duckdb` querying.
 
 --
 
-You could also go `parquet` and switch from `pin_write()` to `pin_upload()`
+You could also go `parquet` which is very efficient to store and fast to read. In `pins` you would switch from `pin_write()` to `pin_upload()`/`pin_download() %>% arrow::read_parquet()` since it's treated as a file rather than one of the native `read` file types.
 
 ---
 
@@ -728,11 +788,13 @@ query_rds <- function(){
   
   tic()
   
-  pinned_rds <- pin_read(
+  pinned_rds <- pin_download(
     board_rsc, 
     "thomas/big-nyc-rds")
   
-  summary_rds <- pinned_rds %>% 
+  rds_file <- readr::read_rds(pinned_rds)
+  
+  summary_rds <- rds_file %>% 
     select(fare_amount, vendor_id) %>% 
     filter(vendor_id == "1") %>% 
     summarise(mean = mean(fare_amount))
@@ -748,7 +810,7 @@ query_rds <- function(){
 
 ### `pins` comparison
 
-`feather` is native to arrow, so it allows for rapid file reading AND allows for partial reading, through a combination of `filter()` + `select()` + `summarize()`
+`feather` is native to `arrow`, so it allows for rapid file reading AND allows for partial reading, through a combination of `filter()` + `select()` + `summarize()`
 
 --
 
@@ -758,9 +820,9 @@ So, `pins` + `feather` + `arrow::open_dataset()` allows for insanely fast querie
 
 ```{r, eval = FALSE}
 query_feather()
-#> 12.4 sec elapsed
+#> 10.2 sec elapsed
 query_rds()
-#> 12.4 sec elapsed
+#> 14.4 sec elapsed
 ```
 
 --
@@ -772,7 +834,7 @@ I promised you speed, but they're the same! You can't "beat" download times `r e
 
 ### `pins` comparison
 
-While you can't beat file transfer, disk space is infinitely cheaper than memory...
+While you can't beat file transfer, disk space is **infinitely** cheaper than memory...
 
 --
 
@@ -785,17 +847,24 @@ file.exists("~/Library/Caches/pins/rsc-e62371cfd77db754024f9c5ed3556a73/2f2ee2e3
 --
 
 ```{r, eval = FALSE}
+# Windowed query
 query_feather()
-#> 1.3 sec elapsed
+#> 0.554 sec elapsed
+
+# read ENTIRE file in
 query_rds()
-#> 13.8 sec elapsed
+#> 11.8 sec elapsed
 ```
 
 ---
 
 ### `pins` comparison
 
-Now, you could get similar speed ups by loading the data completely into memory 1x, but now you're lugging around at least 1 Gb of data for each session... and there are _very few times_ when a user **needs** 1 Gb of data.
+Now, you could get similar query speed ups by loading the data completely into memory 1x, but you'd have to "eat" the initial read time of 10+ seconds.
+
+--
+
+Also... now you're lugging around at least 1 Gb of data for each session... and there are _very few times_ when all of your users **needs** 1 Gb of data all at once.
 
 --
 
@@ -805,7 +874,7 @@ By selecting "windows" of data rapidly, you get the ability to perform useful qu
 
 ### `pins` comparison
 
-So, in your `shiny` apps:
+So, in your `shiny` apps:  
 
 --
 
@@ -834,7 +903,7 @@ server <- function(input, output, session) {
 
 ### `pins` + `duckdb`
 
-File still exists!
+Cached file still exists, so can be used with `duckdb` as well!
 
 --
 
@@ -854,6 +923,11 @@ toc()
 #> 1.48 sec
 ```
 
+---
+
+### Pause for a second
+
+While it's possible to have these work with `shiny` or interactive apps via `pins`, again I think it's worth considering `shiny` apps as **requiring** a proper database if working with that much data.
 
 ---
 
@@ -863,7 +937,7 @@ If your team happens to use AWS, you can make use of [native S3 support with `ar
 
 --
 
-Similar to our `pins` workflow, there is unavoidable file-transfer time BUT you can read the files remotely and you can partition the data in S3.
+Similar to our `pins` workflow, there is unavoidable file-transfer time BUT you can read the files remotely and you _can_ partition the data in S3.
 
 --
 
@@ -885,12 +959,81 @@ This allows `arrow` to intelligently transfer/read only portions of the partitio
 
 --
 
-The core idea is if you have a "real" data warehouse, your team has likely already invested in some way to perform queries (and you can probably just use ODBC or equivalent).
+The core idea is if you have a "real" data warehouse or data lake, your team has likely already invested in some way to perform queries (and you can probably just use ODBC or equivalent).
 
 --
 
-BUT if you have a need to work with large flat-files, `arrow` and/or `duckdb` are very attractive tools.
+BUT if you have a need to work with large flat-files, whether extracted from your data warehouse or other methods, `arrow` and/or `duckdb` are very attractive tools.
 
 --
 
-`pins` can be leveraged along with `arrow`, but you lose a lot of the power of partitioning, since it's a single file. That being said, with `shiny` app-level data, you should be more than fine with a single file.
+`pins` can be leveraged along with `arrow`, but you lose a lot of the power of partitioning, since it's a single file. That being said, with `shiny` app sized data, you should be more than fine with a single file.
+
+---
+
+### Should you use `arrow` with `shiny`?
+
+* If you are relying on CSVs today, sure `parquet` is an efficient storage format, meaning it will be "cheaper" to move around and faster to read, and can still be used via `pins`  
+
+--
+
+* BUT should you move around 1 Gb flat files for `shiny` apps with _many_ users? Probably not.  
+
+--
+
+* Could it be useful for large-data `shiny` apps with low user counts? `r emo::ji("shrug")` Possibly but not necessarily something I'm keen on suggesting as 'ideal'   
+
+--
+
+* But this requires you passing around a large flat file, and typically a dedicated database table will be a better option
+
+---
+
+### Using a dedicated database, aka 3 Tier Architecture
+
+* **Presentation Tier:** Javascript/HTML/CSS, ie Front-end, processed in client browser  
+
+
+* **Application/Logic Tier:** R/Python, processed in memory, meaning `shiny`/`dash`/`streamlit` OR connections to `plumber`/`flask`/`FastAPI`, ie it can include "microservices" or be a "monolith"  
+
+* **Data Tier:** Database/SQL/etc, processed in the database backend  
+
+![](https://docs.aws.amazon.com/whitepapers/latest/serverless-multi-tier-architectures-api-gateway-lambda/images/image2.png)
+
+Expanded in greater detail at: [https://db.rstudio.com/best-practices/dashboards/](https://db.rstudio.com/best-practices/dashboards/)  
+
+---
+
+### Summary
+
+- For both R/Python, `arrow` and/or `DuckDB` can make working with _larger_ out of memory data possible and much faster for interactive work  
+
+--
+
+- `arrow` alone can push `filter()`/`select()` calls _into_ the data, along with basic `group_by()`:  `mutate()` + `summarize()` to data on disk  
+
+--
+
+- `duckdb` further adds full `dbplyr` support, and can be used with native `arrow` BUT it doesn't _require_ `arrow` in the process. Could be a standalone local database on disk.  
+
+--
+
+- If you use `pins`, you can _also_ use `arrow` via `parquet`/`feather` for lightweight files, fast full or partial reads  
+
+--
+
+- `arrow` + `duckdb` with large data are likely not appropriate for high-concurrency `shiny` apps  
+
+--
+
+- Large datasets with potentially high concurrency is where a database (and `dbplyr`) makes sense, and maybe that database is columnar/uses `arrow` behind the scenes!  
+
+---
+
+### Links
+
+- [`arrow` docs](https://arrow.apache.org/docs/r/articles/dataset.html)  
+- [`arrow` 6.0 pre-release news](https://github.com/apache/arrow/commit/62ff6590fc43e83381a8ec722a9c241a49619c78)  
+- [`duckdb` R package](https://duckdb.org/docs/api/r)  
+- [`dbplyr`](https://dbplyr.tidyverse.org/)  
+- [`db.rstudio.com`, Enterprise Ready Dashboards](https://db.rstudio.com/best-practices/dashboards/)  

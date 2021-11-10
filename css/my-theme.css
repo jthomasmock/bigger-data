@@ -8,10 +8,8 @@
 
 .large { font-size: 2em; }
 
-.small { font-size: 0.7em; }
-
 .title {
-  font-family: 'Prata', serif;
+  font-family: 'Bree Serif', serif;
   font-weight: 400;
 }
 
@@ -136,7 +134,7 @@ thead, tfoot, tr:nth-child(even) { background: #eee }
 
 
 .title-slide h1 {
-  font-family: 'Prata', serif;
+  font-family: 'Bree Serif', serif;
   color: #FFFFFF;
   font-size: 3em;
   padding-top: 2em;
@@ -181,7 +179,7 @@ thead, tfoot, tr:nth-child(even) { background: #eee }
 
 .inverse h1 {
   font-size: 4em;
-  font-family: 'Prata', serif;
+  font-family: 'Bree Serif', serif;
   color: #fff;
   padding-top: 0px;
   padding-bottom: 0px;
@@ -191,7 +189,7 @@ thead, tfoot, tr:nth-child(even) { background: #eee }
 
 .inverse h2 {
   font-size: 3em;
-  font-family: 'Prata', serif;
+  font-family: 'Bree Serif', serif;
   text-shadow: 1px 1px 1px #003b3c;
   color: #fff;
   padding-top: 100px;
@@ -200,7 +198,7 @@ thead, tfoot, tr:nth-child(even) { background: #eee }
 
 .inverse h3 {
   font-size: 2em;
-  font-family: 'Prata', serif;
+  font-family: 'Bree Serif', serif;
   text-shadow: 1px 1px 1px #003b3c;
   color: #fff;
   background: rgba(167,185,189, 0.6);
@@ -253,51 +251,6 @@ div.my-footer span {
     bottom: 2px;
 }
 
-.your-turn {
-  background-color: #bed3ec;
-  color: #1f5386;
-}
-
-.your-turn h1 {
-  color: #fff;
-  text-shadow: 1px 1px 2px #1f5386;
-  font-size: 3.5em;
-}
-
-.your-turn h1:before {
-    content: "";
-    display: inline-block;
-    background: url("../Your-turn.png") no-repeat;
-    width: 100px;
-    height: 100px;
-    float: left;
-    background-size: 100px;
-    padding-right: 10px;
-}
-
-.your-turn h2, .your-turn h3 {
-  color: #1f5386 !important;
-}
-
-
-.pop-quiz h1, h1#pop-quiz {
-  color: #E7553C;
-  font-size: 3.5em;
-}
-
-.pop-quiz h2, h2#pop-quiz {
-  color: #E7553C;
-}
-
-h1#pop-quiz:before {
-    content: "";
-    display: inline-block;
-    background: url("../lightbulb-color.png") no-repeat;
-    width: 80px;
-    height: 80px;
-    float: left;
-    background-size: 70px;
-}
 
 .live-code {
   background-color: #000;
